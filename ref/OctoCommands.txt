@@ -10,10 +10,8 @@ Streaming Commands:
 
 Programming commands:
 
-40 56 = clear memory
-0a 00 00 00 = reset memory position
-40 53 = begin to receive new program
-XX 00 = 2x # of frames to be received (second bit is for if more than 128 frames is to be transmitted)
+@S = begin to receive new program
+XX 00 = 2x # of frames to be received (second byte is for if more than 128 frames is to be transmitted)
 
 ___________
 Xx = relay combo for each frame
@@ -23,3 +21,16 @@ xx = # of 1/20 seconds frame is active
 00 = zero time duration for end of program
 
 //An empty sequence will still have 2 frames for the start and end states
+
+
+
+
+
+/////////////////////////////////////////
+Other Serrial Commands from code
+@S = rx_seq_data
+@D = tx_memory
+@P = play sequence
+@M = manual trigger command
+@V = Return Version
+
