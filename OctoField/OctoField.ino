@@ -38,6 +38,12 @@ RJ45 connector - T586B 10/100 DC mode B
 // under normal cirucmstance the pairs on TX and RX are supposed to be opposite polarities for noise canceling, for our purposes we just wire the siganl to both for simplicity and signal reliance.
 
 
+The array the data is stored in is using the SRAM of the arduino, you have to alloy 2x the space due to the array being coppied into the subfunction for transmission.
+Nano SRAM : 2 KB - limit of 512 frames, worst case scenario of 25.5 seconds of recording
+Mega SRAM : 8 KB
+
+
+
 */
 
 //Libraries
@@ -69,12 +75,20 @@ RBD::Button Ch_8(9);
 //outputs
 
 //global variables
-int recording = 0; // variable for tracking if recording is currently in progress 1 = yes
-int Sequence[1023][2]; // create empty 2d array with 2 columns, and more rows than could be needed to sequence [1]relay status int,[2]# of time steps int.
-int RelayStat = 0 ; // number representing on/off status of each relay, ch_1 = 1, ch_2 =2, ch_3 =4, ch_4=8 etc.
-int RelayStatLast = 0 ; // previous value for tracking changes
-int Frame = 0 ; // frame number of sequence represents row in array
-int FrameCount = 0;
+//bool = 1 bit / 0-1
+bool recording = 0; // variable for tracking if recording is currently in progress 1 = yes
+
+// byte = 1 byte / 0-255 values
+byte Sequence[511][2]; // create empty 2d array with 2 columns, and more rows than could be needed to sequence [1]relay status int,[2]# of time steps int.
+byte RelayStat = 0 ; // number representing on/off status of each relay, ch_1 = 1, ch_2 =2, ch_3 =4, ch_4=8 etc.
+byte RelayStatLast = 0 ; // previous value for tracking changes
+byte FrameCount = 0; // number of time segments frame is active
+
+//word = 2 bytes / 0-65535
+word Frame = 0 ; // frame number of sequence represents row in array
+
+
+
 
 //timers
 RBD::Button FrameTime(50); //sets the time for each from to be at 50 ms
@@ -85,7 +99,7 @@ RBD::Button FrameTime(50); //sets the time for each from to be at 50 ms
 ///V- Sub Functions -V ///
 //////////////////////////
 
-void TransmitSeq(int a[][]){
+void TransmitSeq(byte a[][]){
 //Programming hex commands:
 //baud 115200
 //40 56 = clear memory
@@ -98,8 +112,8 @@ void TransmitSeq(int a[][]){
 //------------------- //V- this section is required even if the state didn't change at the end
 //00 = Relay combo for final frame // if programming on octobanger this could have a value, but for here its easier to just force to of
 //00 = zero time duration for end of program
-  int frametrack = 0;
-  int linecount = 0;
+  word frametrack = 0;
+  word linecount = 0;
   Serial.write(0x40, 0x56);
   Serial.write(0x0a, 0x00, 0x00, 0x00);
   Serial.write(0x40, 0x53);
@@ -125,7 +139,7 @@ void TransmitSeq(int a[][]){
   
 }
 
-void TransmitStream(int b){
+void TransmitStream(byte b){
 //Streaming hex Commands:
 //baud 115200
 //40 4d xx = instantly tell octobanger to activate corresponding relays
