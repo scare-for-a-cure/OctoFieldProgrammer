@@ -19,7 +19,7 @@ James Manley - james.manley@scareforacure.org
 
 Pin Mapping
 Arduino Nano
-[0/1] Tx/Rx - Think programming takes place on these pins, not sure.
+[0/1] Tx/Rx - Used to transmit seriall commands to OctoBanger
 [2] Btn_1
 [3] Btn_2
 [4] Btn_3
@@ -38,6 +38,7 @@ Streaming Commands:
   xx = hex conversion of binary of active channels. 
   ch1 = least bit, ch8 = greatest bit
 
+
 Programming commands:
 40 56 = clear memory
 0a 00 00 00 = reset memory position
@@ -49,6 +50,15 @@ xx = # of 1/20 seconds frame is active
 ------------------- 
 00 = off frame for end of program
 00 = zero time duration for end of program
+
+
+RJ45 connector - T586B
+| OctoBanger
+| [RX]  [TX]  [12VDC] [TX]  [GND]
+  1 2   3     4 5     6     7 8
+| [TX]  [RX]  [VIN]   [RX]  [GND]
+| OctoField
+
 */
 
 
