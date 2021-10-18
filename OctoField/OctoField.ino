@@ -109,9 +109,7 @@ RBD::Timer FrameTime(50); //sets the time for each from to be at 50 ms
 void TransmitSeq(byte a[][2]){
 //Programming hex commands:
 //baud 115200
-//40 56 = clear memory
-//0a 00 00 00 = reset memory position
-//40 53 = begin to receive new program
+//@S = begin to receive new program
 //XX 00 = 2x # of frames to be received (second bit is for if more than 128 frames is to be transmitted)
 //___________ //V- this section repeats for each frame to be transmitted
 //Xx = relay combo for each frame
@@ -151,7 +149,7 @@ void SequenceStream(byte b){
 //40 4d xx = instantly tell octobanger to activate corresponding relays
 //  xx = hex conversion of relay states  
 //  ch1 = least bit, ch8 = greatest bit
-  Serial.write('@M');
+  Serial.write('@M'); // these 2 need to be sent as the same line, not sure how to do that.
   Serial.write(b);
 
 
