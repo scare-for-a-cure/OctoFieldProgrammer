@@ -79,14 +79,18 @@ RBD::Button Ch_8(9);
 bool recording = 0; // variable for tracking if recording is currently in progress 1 = yes
 
 // byte = 1 byte / 0-255 values
-byte Sequence[511][2]; // create empty 2d array with 2 columns, and more rows than could be needed to sequence [1]relay status int,[2]# of time steps int.
+byte Sequence[500][2]; // create empty 2d array with 2 columns, and more rows than could be needed to sequence [1]relay status int,[2]# of time steps int.
 byte RelayStat = 0 ; // number representing on/off status of each relay, ch_1 = 1, ch_2 =2, ch_3 =4, ch_4=8 etc.
 byte RelayStatLast = 0 ; // previous value for tracking changes
 byte FrameCount = 0; // number of time segments frame is active
 
+
+
+  
 //word = 2 bytes / 0-65535
 word Frame = 0 ; // frame number of sequence represents row in array
 
+//int = 2 byte / (-32768)-32767
 
 
 
@@ -99,7 +103,7 @@ RBD::Button FrameTime(50); //sets the time for each from to be at 50 ms
 ///V- Sub Functions -V ///
 //////////////////////////
 
-void TransmitSeq(byte a[][]){
+void TransmitSeq(byte a[][2]){
 //Programming hex commands:
 //baud 115200
 //40 56 = clear memory
@@ -114,9 +118,10 @@ void TransmitSeq(byte a[][]){
 //00 = zero time duration for end of program
   word frametrack = 0;
   word linecount = 0;
-  Serial.write(0x40, 0x56);
-  Serial.write(0x0a, 0x00, 0x00, 0x00);
-  Serial.write(0x40, 0x53);
+
+  Serial.write(0x40,0x56);
+  Serial.write(0x10,0x00,0x00,0x00);
+  Serial.write(0x40,0x53);
   for(int y = 1023; y >=0 ; y--){// go through the array and find the last updated frame without 0 frame count, thats where our program stopped
     if(a[y][2] != 0){
       //this is the last part of our sequence
@@ -128,8 +133,8 @@ void TransmitSeq(byte a[][]){
   Serial.write(linecount); //transmit the bottom 8 bits then the top 8 bits
   
   for(int z = 0 ; z <= frametrack; z++){ // go through each frame and transmit both lines
+    Serial.write(a[z][0]);
     Serial.write(a[z][1]);
-    Serial.write(a[z][2];
   }
 
   Serial.write(0x00); // go ahead and send the ending frame.
@@ -172,12 +177,12 @@ void loop(){
     FrameTime.restart();
     Frame = 0; // each time you start recoridng the frame number goes back to 0.
     for(int x=0; X<=1023; x++){ // make sure to clear the full array before starting programming.
-      Sequence[x][1]=0;
-      Sequence[x][2]=0; 
+      Sequence[x][0]=0;
+      Sequence[x][1]=0; 
     }
   }
 
-  if(recording && recording.onPressed(){
+  if(recording && recording.onPressed()){
     recording = LOW;
     FrameTime.stop();
     TransmitSeq(Sequence); // starts transmission of the collected array.
@@ -215,13 +220,13 @@ void loop(){
     }
     if(RelayStatlast == RelayStat){ // if the combination of relays is the same as last round, increase the counted frames in the array
       ++FrameCount;
-      Sequence[Frame][2] = FrameCount; //
+      Sequence[Frame][1] = FrameCount; //
     }
     else{ // if the relay stat is not the same as the last round, move to a new frame in the array
       ++Frame;
       FrameCount=0;
-      Sequence[Frame][1] = RelayStat; // store the relay combo in column 1 of the array
-      Sequence[Frame][2] = FrameCount; // when creating new frame the frames count is 0.
+      Sequence[Frame][0] = RelayStat; // store the relay combo in column 1 of the array
+      Sequence[Frame][1] = FrameCount; // when creating new frame the frames count is 0.
     }
     RelayStatLast = RelayStat;
     SequenceStream(RelayStat); // send the current relay combo to the arduino to have the relay's mimic the buttons in real time.
