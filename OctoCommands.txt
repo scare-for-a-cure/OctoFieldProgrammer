@@ -21,3 +21,5 @@ xx = # of 1/20 seconds frame is active
 ------------------- 
 00 = off frame for end of program
 00 = zero time duration for end of program
+
+//An empty sequence will still have 2 frames for the start and end states
