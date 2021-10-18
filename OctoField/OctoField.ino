@@ -96,6 +96,29 @@ void TransmitSeq(int a[][]){
 //------------------- 
 //00 = off frame for end of program
 //00 = zero time duration for end of program
+  int frametrack = 0;
+  int linecount = 0;
+  Serial.write(0x40, 0x56);
+  Serial.write(0x0a, 0x00, 0x00, 0x00);
+  Serial.write(0x40, 0x53);
+  for(int y = 1023; y >=0 ; y--){// go through the array and find the last updated frame without 0 frame count, thats where our program stopped
+    if(a[y][2] != 0){
+      //this is the last part of our sequence
+      frametrack = y;
+      break; // weve already found the end we can stop looking now.
+    }
+  }
+  linecount = ( frametrack + 2 )*2; // we need the total count of frames not index, + the closing frame, multiplied by 2 to signify that we will be sending 2 lines for each frame
+  Serial.write(linecount); //transmit the bottom 8 bits then the top 8 bits
+  
+  for(int z = 0 ; z <= frametrack; z++){ // go through each frame and transmit both lines
+    Serial.write(a[z][1]);
+    Serial.write(a[z][2];
+  }
+
+  Serial.write(0x00); // go ahead and send the ending frame.
+  Serial.write(0x00);
+
 
   
 }
@@ -106,6 +129,7 @@ void TransmitStream(int b){
 //40 4d xx = instantly tell octobanger to activate corresponding relays
 //  xx = hex conversion of relay states  
 //  ch1 = least bit, ch8 = greatest bit
+  Serial.write(0x40, 0x4d, b);
 
 
 
