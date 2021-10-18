@@ -39,8 +39,8 @@ RJ45 connector - T586B 10/100 DC mode B
 
 
 The array the data is stored in is using the SRAM of the arduino, you have to alloy 2x the space due to the array being coppied into the subfunction for transmission.
-Nano SRAM : 2 KB - limit of 512 frames, worst case scenario of 25.5 seconds of recording
-Mega SRAM : 8 KB
+Nano SRAM : 2 KB - limit of 500 frames, worst case scenario of 25.5 seconds of recording
+Mega SRAM : 8 KB - limit 2000 frames, worst case of 102 seconds
 
 
 
@@ -220,7 +220,15 @@ void loop(){
     }
     if(RelayStatlast == RelayStat){ // if the combination of relays is the same as last round, increase the counted frames in the array
       ++FrameCount;
-      Sequence[Frame][1] = FrameCount; //
+      if(FrameCount <=255){
+        Sequence[Frame][1] = FrameCount; //
+      }
+      else{ // if the frame count goes over 255 then it needs to be moved into a new frame
+        ++Frame;
+        FrameCount=0;
+        Sequence[Frame][0] = RelayStat; // store the relay combo in column 1 of the array
+        Sequence[Frame][1] = FrameCount; // when creating new frame the frames count is 0.
+      }
     }
     else{ // if the relay stat is not the same as the last round, move to a new frame in the array
       ++Frame;
