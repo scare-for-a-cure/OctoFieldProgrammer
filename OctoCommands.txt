@@ -1,4 +1,4 @@
-A quick reference for what different commands to the octobanger does.
+A quick reference for what different Hex code commands to the octobanger does.
 
 Streaming Commands:
 
