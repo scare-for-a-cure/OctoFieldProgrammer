@@ -98,7 +98,7 @@ word Frame = 0 ; // frame number of sequence represents row in array
 
 
 //timers
-RBD::Button FrameTime(50); //sets the time for each from to be at 50 ms
+RBD::Timer FrameTime(50); //sets the time for each from to be at 50 ms
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -122,9 +122,7 @@ void TransmitSeq(byte a[][2]){
   word frametrack = 0;
   word linecount = 0;
 
-  Serial.write(0x40,0x56);
-  Serial.write(0x10,0x00,0x00,0x00);
-  Serial.write(0x40,0x53);
+  Serial.write('@S');
   for(int y = 1023; y >=0 ; y--){// go through the array and find the last updated frame without 0 frame count, thats where our program stopped
     if(a[y][2] != 0){
       //this is the last part of our sequence
@@ -147,13 +145,14 @@ void TransmitSeq(byte a[][2]){
   
 }
 
-void TransmitStream(byte b){
+void SequenceStream(byte b){
 //Streaming hex Commands:
 //baud 115200
 //40 4d xx = instantly tell octobanger to activate corresponding relays
 //  xx = hex conversion of relay states  
 //  ch1 = least bit, ch8 = greatest bit
-  Serial.write(0x40, 0x4d, b);
+  Serial.write('@M');
+  Serial.write(b);
 
 
 
@@ -175,17 +174,17 @@ void setup(){
 
 void loop(){
 
-  if(!recording && recording.onPressed()){
+  if(!recording && Record.onPressed()){
     recording = HIGH;
     FrameTime.restart();
     Frame = 0; // each time you start recoridng the frame number goes back to 0.
-    for(int x=0; X<=1023; x++){ // make sure to clear the full array before starting programming.
+    for(int x=0; x<=500; x++){ // make sure to clear the full array before starting programming.
       Sequence[x][0]=0;
       Sequence[x][1]=0; 
     }
   }
 
-  if(recording && recording.onPressed()){
+  if(recording && Record.onPressed()){
     recording = LOW;
     FrameTime.stop();
     TransmitSeq(Sequence); // starts transmission of the collected array.
@@ -221,7 +220,7 @@ void loop(){
     if(Ch_8.isPressed()){
       RelayStat += 128;
     }
-    if(RelayStatlast == RelayStat){ // if the combination of relays is the same as last round, increase the counted frames in the array
+    if(RelayStatLast == RelayStat){ // if the combination of relays is the same as last round, increase the counted frames in the array
       ++FrameCount;
       if(FrameCount <=255){
         Sequence[Frame][1] = FrameCount; //
