@@ -1,0 +1,25 @@
+A quick reference for what different Hex code commands to the octobanger does.
+
+Streaming Commands:
+
+40 4d xx = instantly tell octobanger to activate corresponding relays
+
+      xx = hex conversion of binary of active channels. 
+			        ch1 = least bit, ch8 = greatest bit
+
+
+Programming commands:
+
+40 56 = clear memory
+0a 00 00 00 = reset memory position
+40 53 = begin to receive new program
+XX 00 = 2x # of frames to be received (second bit is for if more than 128 frames is to be transmitted)
+
+___________
+Xx = relay combo for each frame
+xx = # of 1/20 seconds frame is active
+------------------- 
+00 = off frame for end of program
+00 = zero time duration for end of program
+
+//An empty sequence will still have 2 frames for the start and end states
