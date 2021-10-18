@@ -35,6 +35,8 @@ RJ45 connector - T586B 10/100 DC mode B
   1 2   3     4 5     6     7 8
 | [TX]  [RX]  [VIN]   [RX]  [GND]
 | OctoField
+// under normal cirucmstance the pairs on TX and RX are supposed to be opposite polarities for noise canceling, for our purposes we just wire the siganl to both for simplicity and signal reliance.
+
 
 */
 
@@ -90,11 +92,11 @@ void TransmitSeq(int a[][]){
 //0a 00 00 00 = reset memory position
 //40 53 = begin to receive new program
 //XX 00 = 2x # of frames to be received (second bit is for if more than 128 frames is to be transmitted)
-//___________
+//___________ //V- this section repeats for each frame to be transmitted
 //Xx = relay combo for each frame
 //xx = # of 1/20 seconds frame is active
-//------------------- 
-//00 = off frame for end of program
+//------------------- //V- this section is required even if the state didn't change at the end
+//00 = Relay combo for final frame // if programming on octobanger this could have a value, but for here its easier to just force to of
 //00 = zero time duration for end of program
   int frametrack = 0;
   int linecount = 0;
