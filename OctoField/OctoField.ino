@@ -42,6 +42,9 @@ The array the data is stored in is using the SRAM of the arduino, you have to al
 Nano SRAM : 2 KB - limit of 512 frames, worst case scenario of 25.5 seconds of recording
 Mega SRAM : 8 KB
 
+The sequence is stored EEPROM of the Octobanger, the EEPROM is about half the size of the sram, 
+Nano EEPROM : 1KB
+Mega EEPROM : 4KB
 
 
 */
