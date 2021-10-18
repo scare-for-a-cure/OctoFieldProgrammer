@@ -52,7 +52,7 @@ xx = # of 1/20 seconds frame is active
 00 = zero time duration for end of program
 
 
-RJ45 connector - T586B
+RJ45 connector - T586B 10/100 DC mode B
 | OctoBanger
 | [RX]  [TX]  [12VDC] [TX]  [GND]
   1 2   3     4 5     6     7 8
