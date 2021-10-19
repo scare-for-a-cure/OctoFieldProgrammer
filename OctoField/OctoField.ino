@@ -128,8 +128,12 @@ void TransmitSeq(byte a[][2]){
       break; // weve already found the end we can stop looking now.
     }
   }
-  linecount = ( frametrack + 2 )*2; // we need the total count of frames not index, + the closing frame, multiplied by 2 to signify that we will be sending 2 lines for each frame
-  Serial.write(linecount); //transmit the bottom 8 bits then the top 8 bits
+  linecount = ( frametrack + 2 )*2; // we need the total count of frames not the index, + the closing frame, multiplied by 2 to signify that we will be sending 2 lines for each frame
+  
+  byte low = linecount;
+  byte high = linecount >> 8;
+  byte TwoByteArray[] ={low,high};
+  Serial.write(TwoByteArray,2); //transmit the bottom 8 bits then the top 8 bits
   
   for(int z = 0 ; z <= frametrack; z++){ // go through each frame and transmit both lines
     Serial.write(a[z][0]);
@@ -149,11 +153,10 @@ void SequenceStream(byte b){
 //40 4d xx = instantly tell octobanger to activate corresponding relays
 //  xx = hex conversion of relay states  
 //  ch1 = least bit, ch8 = greatest bit
-  Serial.write('@M'); // these 2 need to be sent as the same line, not sure how to do that.
-  Serial.write(b);
-
-
-
+  //byte ThreeByteArray[] = {64,77,b};
+  byte ThreeByteArray[] = {'@','M',b};
+  Serial.write(ThreeByteArray,3); // these 2 need to be sent as the same line, not sure how to do that.
+ 
 }
 
 
