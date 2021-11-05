@@ -110,7 +110,7 @@ void TransmitSeq(byte a[][2]){
 //Programming hex commands:
 //baud 115200
 //@S = begin to receive new program
-//XX 00 = 2x # of frames to be received (second bit is for if more than 128 frames is to be transmitted)
+//XX 00 = 2x # of frames to be received (least byte greatest byte)
 //___________ //V- this section repeats for each frame to be transmitted
 //Xx = relay combo for each frame
 //xx = # of 1/20 seconds frame is active
@@ -119,29 +119,45 @@ void TransmitSeq(byte a[][2]){
 //00 = zero time duration for end of program
   word frametrack = 0;
   word linecount = 0;
+  byte TwoByteArray[] ={'@','S'};
 
-  Serial.write('@S');
-  for(int y = 1023; y >=0 ; y--){// go through the array and find the last updated frame without 0 frame count, thats where our program stopped
+  Serial.write(TwoByteArray,2);
+  //Serial.println("@S");
+  for(int y = 499; y >=0 ; y--){// go through the array and find the last updated frame without 0 frame count, thats where our program stopped
     if(a[y][2] != 0){
       //this is the last part of our sequence
       frametrack = y;
       break; // weve already found the end we can stop looking now.
     }
   }
+  //Serial.println(frametrack);
   linecount = ( frametrack + 2 )*2; // we need the total count of frames not the index, + the closing frame, multiplied by 2 to signify that we will be sending 2 lines for each frame
   
   byte low = linecount;
   byte high = linecount >> 8;
-  byte TwoByteArray[] ={low,high};
+  TwoByteArray[0] = low;
+  TwoByteArray[1] = high;
   Serial.write(TwoByteArray,2); //transmit the bottom 8 bits then the top 8 bits
+  Serial.print(low);
+  //Serial.print(",");
+  //Serial.println(high);
   
   for(int z = 0 ; z <= frametrack; z++){ // go through each frame and transmit both lines
-    Serial.write(a[z][0]);
-    Serial.write(a[z][1]);
+    Serial.write(a[z][0]);  //relay combo
+    Serial.write(a[z][1]);  //# of frames active
+    
+    //Serial.println();
+    //Serial.print(a[z][0]);
+    //Serial.print(",");
+    //Serial.println(a[z][1]);
+    //Serial.println();
   }
 
   Serial.write(0x00); // go ahead and send the ending frame.
   Serial.write(0x00);
+  //Serial.println("00");
+  //Serial.println("00");
+  //Serial.println("End Programming Sequence");
 
 
   
@@ -150,10 +166,11 @@ void TransmitSeq(byte a[][2]){
 void SequenceStream(byte b){
 //Streaming hex Commands:
 //baud 115200
-//40 4d xx = instantly tell octobanger to activate corresponding relays
-//  xx = hex conversion of relay states  
-//  ch1 = least bit, ch8 = greatest bit
-  //byte ThreeByteArray[] = {64,77,b};
+//@Mx = instantly tell octobanger to activate corresponding relays
+//      //x= hex value of relay states  
+//
+//byte ThreeByteArray[] = {64,77,b};
+  //Serial.println(b);
   byte ThreeByteArray[] = {'@','M',b};
   Serial.write(ThreeByteArray,3); // confirmed in labview that this would work.
  
@@ -169,7 +186,7 @@ void SequenceStream(byte b){
 
 void setup(){
   Serial.begin(115200); // override baud rate for uno, should also work for nano
-  
+  FrameTime.stop();
   
 }
 
@@ -221,6 +238,7 @@ void loop(){
     if(Ch_8.isPressed()){
       RelayStat += 128;
     }
+    //Serial.println(RelayStat);
     if(RelayStatLast == RelayStat){ // if the combination of relays is the same as last round, increase the counted frames in the array
       ++FrameCount;
       if(FrameCount <=255){
