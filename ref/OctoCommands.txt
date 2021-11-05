@@ -2,11 +2,10 @@ A quick reference for what different Hex code commands to the octobanger does.
 
 Streaming Commands:
 
-40 4d xx = instantly tell octobanger to activate corresponding relays
+@Mx = instantly tell octobanger to activate corresponding relays
 
       xx = hex conversion of binary of active channels. 
-			        ch1 = least bit, ch8 = greatest bit
-
+			        
 
 Programming commands:
 

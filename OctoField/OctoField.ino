@@ -155,7 +155,7 @@ void SequenceStream(byte b){
 //  ch1 = least bit, ch8 = greatest bit
   //byte ThreeByteArray[] = {64,77,b};
   byte ThreeByteArray[] = {'@','M',b};
-  Serial.write(ThreeByteArray,3); // these 2 need to be sent as the same line, not sure how to do that.
+  Serial.write(ThreeByteArray,3); // confirmed in labview that this would work.
  
 }
 
