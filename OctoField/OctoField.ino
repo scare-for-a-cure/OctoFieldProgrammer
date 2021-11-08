@@ -47,6 +47,10 @@ Nano EEPROM : 1KB
 Mega EEPROM : 4KB
 
 
+//11/8/21-James M
+Was able to get it to record reliably I think the issue i was having before was that i was trying to use one nano to power the other, which doesn't provide enough power.
+This time i opted to use a mega that was powered seperate form the octobanger and it seemed to have worked fine. Will need to restest with another nano just to make sure there wasn't something else causing the issues.
+
 */
 
 //Libraries
@@ -72,17 +76,23 @@ RBD::Button Ch_5(6);
 RBD::Button Ch_6(7);
 RBD::Button Ch_7(8);
 RBD::Button Ch_8(9);
+RBD::Button Trigger(10);
 
-
+//timers
+RBD::Timer FrameTime(50); //sets the time for each from to be at 50 ms
+RBD::Timer RecordBlink(200);// for blinking status led while recording
 
 //outputs
+int Indicator = 13;
+
 
 //global variables
 //bool = 1 bit / 0-1
 bool recording = 0; // variable for tracking if recording is currently in progress 1 = yes
+bool BlinkStatus = 0;
 
 // byte = 1 byte / 0-255 values
-byte Sequence[500][2]; // create empty 2d array with 2 columns, and more rows than could be needed to sequence [1]relay status int,[2]# of time steps int.
+byte Sequence[500][2]; // create empty 2d array with 2 columns, and more rows than could be needed to sequence [0]relay status int,[1]# of time steps int.
 byte RelayStat = 0 ; // number representing on/off status of each relay, ch_1 = 1, ch_2 =2, ch_3 =4, ch_4=8 etc.
 byte RelayStatLast = 0 ; // previous value for tracking changes
 byte FrameCount = 0; // number of time segments frame is active
@@ -97,8 +107,7 @@ word Frame = 0 ; // frame number of sequence represents row in array
 
 
 
-//timers
-RBD::Timer FrameTime(50); //sets the time for each from to be at 50 ms
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -121,43 +130,44 @@ void TransmitSeq(byte a[][2]){
   word linecount = 0;
   byte TwoByteArray[] ={'@','S'};
 
-  Serial.write(TwoByteArray,2);
-  //Serial.println("@S");
+  Serial1.write(TwoByteArray,2);
+  Serial.println("@S");
   for(int y = 499; y >=0 ; y--){// go through the array and find the last updated frame without 0 frame count, thats where our program stopped
-    if(a[y][2] != 0){
+    if(a[y][1] != 0){
       //this is the last part of our sequence
       frametrack = y;
       break; // weve already found the end we can stop looking now.
     }
   }
-  //Serial.println(frametrack);
+  
   linecount = ( frametrack + 2 )*2; // we need the total count of frames not the index, + the closing frame, multiplied by 2 to signify that we will be sending 2 lines for each frame
   
   byte low = linecount;
   byte high = linecount >> 8;
   TwoByteArray[0] = low;
   TwoByteArray[1] = high;
-  Serial.write(TwoByteArray,2); //transmit the bottom 8 bits then the top 8 bits
+  Serial1.write(TwoByteArray,2); //transmit the bottom 8 bits then the top 8 bits
+  Serial.print("Number of frames hex: ");
   Serial.print(low);
-  //Serial.print(",");
-  //Serial.println(high);
+  Serial.print(",");
+  Serial.println(high);
   
   for(int z = 0 ; z <= frametrack; z++){ // go through each frame and transmit both lines
-    Serial.write(a[z][0]);  //relay combo
-    Serial.write(a[z][1]);  //# of frames active
-    
-    //Serial.println();
-    //Serial.print(a[z][0]);
-    //Serial.print(",");
-    //Serial.println(a[z][1]);
-    //Serial.println();
+    Serial1.write(a[z][0]);  //relay combo
+    Serial1.write(a[z][1]);  //# of frames active
+
+    Serial.print("Frame#:");
+    Serial.print(z+1 );
+    Serial.print(" : ");
+    Serial.print(a[z][0]);
+    Serial.print(",");
+    Serial.println(a[z][1]);
   }
 
-  Serial.write(0x00); // go ahead and send the ending frame.
-  Serial.write(0x00);
-  //Serial.println("00");
-  //Serial.println("00");
-  //Serial.println("End Programming Sequence");
+  Serial1.write(0); // go ahead and send the ending frame.
+  Serial1.write(0);
+  Serial.println("00,00");
+  Serial.println("End Programming Sequence");
 
 
   
@@ -172,7 +182,9 @@ void SequenceStream(byte b){
 //byte ThreeByteArray[] = {64,77,b};
   //Serial.println(b);
   byte ThreeByteArray[] = {'@','M',b};
-  Serial.write(ThreeByteArray,3); // confirmed in labview that this would work.
+  Serial1.write(ThreeByteArray,3); // confirmed in labview that this would work.
+  Serial.print("@M");
+  Serial.println(b);
  
 }
 
@@ -185,8 +197,17 @@ void SequenceStream(byte b){
 //////////////////////// 
 
 void setup(){
-  Serial.begin(115200); // override baud rate for uno, should also work for nano
+  Serial.begin(115200); // commuication with computer
+  Serial1.begin(115200); //override baud rate for uno, should also work for nano
   FrameTime.stop();
+  pinMode(Indicator, OUTPUT);
+
+  Record.setDebounceTimeout(40);
+  Trigger.setDebounceTimeout(40);
+
+  //while(!Serial.available()){
+  //  delay(100);
+  //}
   
 }
 
@@ -196,21 +217,39 @@ void loop(){
     recording = HIGH;
     FrameTime.restart();
     Frame = 0; // each time you start recoridng the frame number goes back to 0.
-    for(int x=0; x<=500; x++){ // make sure to clear the full array before starting programming.
+    for(int x=0; x<500; x++){ // make sure to clear the full array before starting programming.
       Sequence[x][0]=0;
       Sequence[x][1]=0; 
     }
+    delay(20);
   }
 
   if(recording && Record.onPressed()){
     recording = LOW;
     FrameTime.stop();
     TransmitSeq(Sequence); // starts transmission of the collected array.
+    delay(500);
+  }
+
+  if(Trigger.onPressed()){
+    byte TwoByteArray[] ={'@','T'};
+    Serial1.write(TwoByteArray,2);
+    Serial.print("@T");
+    delay(500);
   }
   
 ///^ INPUT BASED EVENTS GO ABOVE ^///
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///V TIMING BASED EVENTS GO BELOW V///
+
+  if(recording && RecordBlink.onRestart()){
+    BlinkStatus = !BlinkStatus;
+    digitalWrite(Indicator, BlinkStatus);
+  }
+  if(!recording){
+    BlinkStatus = 0;
+    digitalWrite(Indicator, BlinkStatus);
+  }
 
   if(FrameTime.onRestart()){ // should repeat every 50 ms, re-reading all the buttons and recording them.
     RelayStat = 0;
