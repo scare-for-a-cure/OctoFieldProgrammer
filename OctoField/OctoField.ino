@@ -130,8 +130,9 @@ void TransmitSeq(byte a[][2]){
   word linecount = 0;
   byte TwoByteArray[] ={'@','S'};
 
-  Serial1.write(TwoByteArray,2);
-  Serial.println("@S");
+  Serial.write(TwoByteArray,2);
+  //Serial1.write(TwoByteArray,2);
+  //Serial.println("@S");
   for(int y = 499; y >=0 ; y--){// go through the array and find the last updated frame without 0 frame count, thats where our program stopped
     if(a[y][1] != 0){
       //this is the last part of our sequence
@@ -146,28 +147,35 @@ void TransmitSeq(byte a[][2]){
   byte high = linecount >> 8;
   TwoByteArray[0] = low;
   TwoByteArray[1] = high;
-  Serial1.write(TwoByteArray,2); //transmit the bottom 8 bits then the top 8 bits
-  Serial.print("Number of frames hex: ");
-  Serial.print(low);
-  Serial.print(",");
-  Serial.println(high);
+
+  Serial.write(TwoByteArray,2); //transmit the bottom 8 bits then the top 8 bits
+  //Serial1.write(TwoByteArray,2); //transmit the bottom 8 bits then the top 8 bits
+  //Serial.print("Number of frames hex: ");
+  //Serial.print(low);
+  //Serial.print(",");
+  //Serial.println(high);
   
   for(int z = 0 ; z <= frametrack; z++){ // go through each frame and transmit both lines
-    Serial1.write(a[z][0]);  //relay combo
-    Serial1.write(a[z][1]);  //# of frames active
+    Serial.write(a[z][0]);  //relay combo
+    Serial.write(a[z][1]);  //# of frames active
+    //Serial1.write(a[z][0]);  //relay combo
+    //Serial1.write(a[z][1]);  //# of frames active
 
-    Serial.print("Frame#:");
-    Serial.print(z+1 );
-    Serial.print(" : ");
-    Serial.print(a[z][0]);
-    Serial.print(",");
-    Serial.println(a[z][1]);
+    //Serial.print("Frame#:");
+    //Serial.print(z+1 );
+    //Serial.print(" : ");
+    //Serial.print(a[z][0]);
+    //Serial.print(",");
+    //Serial.println(a[z][1]);
   }
 
-  Serial1.write(0); // go ahead and send the ending frame.
-  Serial1.write(0);
-  Serial.println("00,00");
-  Serial.println("End Programming Sequence");
+  Serial.write(0); // go ahead and send the ending frame.
+  Serial.write(0);
+
+  //Serial1.write(0); // go ahead and send the ending frame.
+  //Serial1.write(0);
+  //Serial.println("00,00");
+  //Serial.println("End Programming Sequence");
 
 
   
@@ -182,9 +190,12 @@ void SequenceStream(byte b){
 //byte ThreeByteArray[] = {64,77,b};
   //Serial.println(b);
   byte ThreeByteArray[] = {'@','M',b};
-  Serial1.write(ThreeByteArray,3); // confirmed in labview that this would work.
-  Serial.print("@M");
-  Serial.println(b);
+
+  Serial.write(ThreeByteArray,3); // confirmed in labview that this would work.
+  
+  //Serial1.write(ThreeByteArray,3); // confirmed in labview that this would work.
+  //Serial.print("@M");
+  //Serial.println(b);
  
 }
 
@@ -198,7 +209,9 @@ void SequenceStream(byte b){
 
 void setup(){
   Serial.begin(115200); // commuication with computer
-  Serial1.begin(115200); //override baud rate for uno, should also work for nano
+  
+  //Serial.begin(115200); // commuication with computer
+  //Serial1.begin(115200); //override baud rate for uno, should also work for nano
   FrameTime.stop();
   pinMode(Indicator, OUTPUT);
 
@@ -233,8 +246,9 @@ void loop(){
 
   if(Trigger.onPressed()){
     byte TwoByteArray[] ={'@','T'};
-    Serial1.write(TwoByteArray,2);
-    Serial.print("@T");
+    Serial.write(TwoByteArray,2);
+    //Serial1.write(TwoByteArray,2);
+    //Serial.print("@T");
     delay(500);
   }
   
