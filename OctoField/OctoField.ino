@@ -27,13 +27,17 @@ Arduino Nano
 [7] Btn_6
 [8] Btn_7
 [9] Btn_8
+[10]Trigger
 [11]Record Button
+[12] Reset
 
 RJ45 connector - T586B 10/100 DC mode B
 | OctoBanger
-| [RX]  [TX]  [12VDC] [TX]  [GND]
-  1 2   3     4 5     6     7 8
-| [TX]  [RX]  [VIN]   [RX]  [GND]
+| [RX]  [TX]  [12VDC] [TX]  [GND] [RST]
+  1 2   3     4 5     6     7     8
+  WO O  WG    B WB    G     WBr   Br
+| [TX]  [RX]  [VIN]   [RX]  [GND] [RST]
+
 | OctoField
 // under normal cirucmstance the pairs on TX and RX are supposed to be opposite polarities for noise canceling, for our purposes we just wire the siganl to both for simplicity and signal reliance.
 
@@ -84,7 +88,7 @@ RBD::Timer RecordBlink(200);// for blinking status led while recording
 
 //outputs
 int Indicator = 13;
-
+int Reset = 12;
 
 //global variables
 //bool = 1 bit / 0-1
@@ -168,9 +172,9 @@ void TransmitSeq(byte a[][2]){
     //Serial.print(",");
     //Serial.println(a[z][1]);
   }
-
-  Serial.write(0); // go ahead and send the ending frame.
-  Serial.write(0);
+  byte zero = 0;
+  Serial.write(zero); // go ahead and send the ending frame.
+  Serial.write(zero);
 
   //Serial1.write(0); // go ahead and send the ending frame.
   //Serial1.write(0);
@@ -214,6 +218,8 @@ void setup(){
   //Serial1.begin(115200); //override baud rate for uno, should also work for nano
   FrameTime.stop();
   pinMode(Indicator, OUTPUT);
+  pinMode(Reset, OUTPUT);
+  digitalWrite(Reset, HIGH);
 
   Record.setDebounceTimeout(40);
   Trigger.setDebounceTimeout(40);
@@ -228,6 +234,7 @@ void loop(){
 
   if(!recording && Record.onPressed()){
     recording = HIGH;
+    digitalWrite(Reset, LOW);
     FrameTime.restart();
     Frame = 0; // each time you start recoridng the frame number goes back to 0.
     for(int x=0; x<500; x++){ // make sure to clear the full array before starting programming.
@@ -235,6 +242,7 @@ void loop(){
       Sequence[x][1]=0; 
     }
     delay(20);
+    digitalWrite(Reset, HIGH);
   }
 
   if(recording && Record.onPressed()){
