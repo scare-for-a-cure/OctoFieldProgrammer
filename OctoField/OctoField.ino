@@ -137,7 +137,7 @@ void TransmitSeq(byte a[][2]){
   Serial.write(TwoByteArray,2);
   //Serial1.write(TwoByteArray,2);
   //Serial.println("@S");
-  for(int y = 499; y >=0 ; y--){// go through the array and find the last updated frame without 0 frame count, thats where our program stopped
+  for(int y = 449; y >=0 ; y--){// go through the array and find the last updated frame without 0 frame count, thats where our program stopped
     if(a[y][1] != 0){
       //this is the last part of our sequence
       frametrack = y;
@@ -196,8 +196,8 @@ void SequenceStream(byte b){
   byte ThreeByteArray[] = {'@','M',b};
 
   Serial.write(ThreeByteArray,3); // confirmed in labview that this would work.
-  
-  //Serial1.write(ThreeByteArray,3); // confirmed in labview that this would work.
+
+  // must disable all serial prints for use, as they would cause errors otherwise
   //Serial.print("@M");
   //Serial.println(b);
  
@@ -234,22 +234,33 @@ void loop(){
 
   if(!recording && Record.onPressed()){
     recording = HIGH;
+    digitalWrite(Indicator, HIGH);
     digitalWrite(Reset, LOW);
-    FrameTime.restart();
     Frame = 0; // each time you start recoridng the frame number goes back to 0.
-    for(int x=0; x<500; x++){ // make sure to clear the full array before starting programming.
+    FrameCount = 0;
+    for(int x=0; x<450; x++){ // make sure to clear the full array before starting programming.
       Sequence[x][0]=0;
       Sequence[x][1]=0; 
     }
-    delay(20);
+    delay(50);
     digitalWrite(Reset, HIGH);
+    delay(5500);
+    digitalWrite(Indicator, LOW);
+    FrameTime.restart();
   }
 
   if(recording && Record.onPressed()){
     recording = LOW;
     FrameTime.stop();
+    digitalWrite(Indicator, HIGH);
+    //digitalWrite(Reset, LOW);
+    //delay(50);
+    //digitalWrite(Reset, HIGH);
+    delay(1000);
     TransmitSeq(Sequence); // starts transmission of the collected array.
     delay(500);
+    digitalWrite(Indicator, LOW);
+
   }
 
   if(Trigger.onPressed()){
